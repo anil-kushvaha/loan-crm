@@ -93,7 +93,7 @@ const LoanApplication = ({ applicant, onUpdate }) => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:5000/api/loans/apply/${applicantId}`, {
+      const response = await fetch(`https://loan-crm-server-yn4o.onrender.com/api/loans/apply/${applicantId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
