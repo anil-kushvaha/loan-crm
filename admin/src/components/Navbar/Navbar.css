@@ -1,0 +1,162 @@
+/* =========================
+   NAVBAR CONTAINER
+========================= */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+  min-height: 70px;
+  padding: 0 40px;
+
+  background: #0f172a;
+  /* Sophisticated Slate Blue/Dark theme */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+
+  animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   LEFT SECTION (LOGO & TITLE)
+========================= */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+  background: linear-gradient(to right, #ffffff, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* =========================
+   RIGHT SECTION (USER INFO & LOGOUT)
+========================= */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+/* User Identity Tag */
+.user-info-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Simulated Avatar Icon */
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  color: #3b82f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.user-role {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* Clean, Professional Logout Button */
+.logout-btn {
+  background-color: transparent;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #ef4444;
+  /* Clean CRM Red on hover */
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* =========================
+   RESPONSIVE DESIGN
+========================= */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 20px;
+    min-height: 64px;
+  }
+
+  .app-title {
+    font-size: 18px;
+  }
+
+  .user-details {
+    display: none;
+    /* Hide names on smaller devices to save space */
+  }
+
+  .navbar-right {
+    gap: 16px;
+  }
+}

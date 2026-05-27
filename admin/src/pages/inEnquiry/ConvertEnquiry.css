@@ -1,0 +1,299 @@
+/* Container Base Styles */
+.convert-container {
+  width: 100%;
+  padding: 32px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.convert-container h1 {
+  margin: 0 0 28px 0;
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 600;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* System Global Messages */
+.error,
+.success {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+/* Dynamic Viewport Split Engine */
+.dashboard-workspace {
+  display: grid;
+  grid-template-columns: 100%;
+  gap: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-workspace.split-active {
+  grid-template-columns: 65% 35%;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-workspace.split-active {
+    grid-template-columns: 100%;
+  }
+}
+
+/* Enquiries Panel Wrap */
+.enquiries-panel {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* Smart Grid Cards Layout */
+.enquiry-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px;
+}
+
+/* When split view is active, restrict card widths cleanly */
+.split-active .enquiry-cards {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.enquiry-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 18px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.enquiry-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  transform: translateY(-2px);
+}
+
+.enquiry-card.selected {
+  border-color: #2563eb;
+  background: #f8fafc;
+  box-shadow: 0 0 0 1px #2563eb;
+}
+
+.enquiry-card h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.enquiry-card p {
+  margin: 8px 0;
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.enquiry-card strong {
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Clean Form Component Architecture */
+.conversion-panel {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  box-sizing: border-box;
+  position: sticky;
+  top: 32px;
+  height: fit-content;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.conversion-panel input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+  color: #0f172a;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.conversion-panel input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+/* Functional Dashboard Badges */
+.badge-service {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  background: #f1f5f9;
+  color: #334155;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.badge-pan-ref {
+  font-family: monospace;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Clean Button Standard controls */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-submit,
+.btn-cancel {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  flex: 1;
+  transition: all 0.2s ease;
+}
+
+.btn-submit {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.btn-submit:disabled {
+  background: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-cancel:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Loaders and Status Fallbacks */
+.loading,
+.no-data {
+  text-align: center;
+  padding: 48px;
+  color: #64748b;
+  font-size: 15px;
+}
+
+@media (max-width: 640px) {
+  .convert-container {
+    padding: 16px;
+  }
+}
+
+/* Optimized Global Status Banner styles */
+.error-banner,
+.success-banner {
+  padding: 12px 20px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  font-size: 14px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.error-banner {
+  background-color: #fdf2f2;
+  border: 1px solid #f8b4b4;
+  color: #9b1c1c;
+}
+
+.success-banner {
+  background-color: #f3faf7;
+  border: 1px solid #def7ec;
+  color: #03543f;
+}
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

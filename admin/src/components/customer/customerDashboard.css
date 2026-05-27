@@ -1,0 +1,701 @@
+/* ==========================================================================
+   CUSTOMER DASHBOARD - ADVANCED ARCHITECTURE DESIGN SYSTEM (MOBILE-FIRST)
+   ========================================================================== */
+
+:root {
+  --cd-primary: #2563eb;
+  --cd-primary-hover: #1d4ed8;
+  --cd-primary-light: #eff6ff;
+  --cd-bg: #f8fafc;
+  --cd-card-bg: #ffffff;
+  --cd-text-main: #0f172a;
+  --cd-text-muted: #475569;
+  --cd-border: #e2e8f0;
+  --cd-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --cd-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+
+  /* Financial Status Hex Engine */
+  --cd-pending: #a16207;
+  --cd-pending-bg: #fef9c3;
+  --cd-approved: #15803d;
+  --cd-approved-bg: #dcfce7;
+  --cd-rejected: #b91c1c;
+  --cd-rejected-bg: #fee2e2;
+  --cd-disbursed: #1d4ed8;
+  --cd-disbursed-bg: #dbeafe;
+
+  --cd-radius-lg: 16px;
+  --cd-radius-md: 12px;
+  --cd-radius-sm: 8px;
+  --cd-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+
+.cd-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--cd-bg);
+  color: var(--cd-text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding-bottom: 74px;
+  /* Room for fixed bottom nav bar */
+}
+
+/* ===== Elegant Mobile Bottom Navigation Bar ===== */
+.cd-mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 68px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--cd-border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+  padding: 0 8px;
+  box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.04);
+}
+
+.cd-mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--cd-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 28%;
+  height: 100%;
+  border-radius: var(--cd-radius-md);
+  transition: var(--cd-transition);
+}
+
+.cd-mobile-nav-item .cd-nav-icon {
+  font-size: 22px;
+}
+
+.cd-mobile-nav-item.active {
+  color: var(--cd-primary);
+  background-color: var(--cd-primary-light);
+}
+
+/* ===== Hide Desktop Elements by default ===== */
+.cd-sidebar {
+  display: none;
+}
+
+/* ===== Main Application View Workspace ===== */
+.cd-main {
+  flex: 1;
+  padding: 16px 16px 40px 16px;
+  width: 100%;
+}
+
+.cd-profile-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Top Level Branding & Headers */
+.cd-header {
+  background: var(--cd-card-bg);
+  padding: 20px;
+  border-radius: var(--cd-radius-lg);
+  margin-bottom: 16px;
+  border: 1px solid var(--cd-border);
+  box-shadow: var(--cd-shadow-sm);
+}
+
+.cd-header h1 {
+  margin: 0 0 4px 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.cd-header p {
+  margin: 0 0 16px 0;
+  font-size: 0.85rem;
+  color: var(--cd-text-muted);
+  line-height: 1.4;
+}
+
+/* Top Progress Tracker UI Layout */
+.cd-progress-section {
+  background: var(--cd-bg);
+  padding: 12px 16px;
+  border-radius: var(--cd-radius-md);
+  border: 1px solid var(--cd-border);
+}
+
+.cd-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--cd-text-muted);
+  margin-bottom: 6px;
+}
+
+.cd-progress-text .cd-percentage {
+  color: var(--cd-primary);
+}
+
+.cd-progress-bar {
+  background-color: #e2e8f0;
+  border-radius: 99px;
+  height: 8px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.cd-progress-fill {
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ===== GRID STYLE FOR SUB-NAV TABS (FIXED LABELS VISIBILITY) ===== */
+.cd-profile-subnav-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* Mobile par 2 lines mein 2-2 buttons fix dikhenge */
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.cd-subnav-btn {
+  width: 100%;
+  background: var(--cd-card-bg);
+  border: 1px solid var(--cd-border);
+  color: var(--cd-text-muted);
+  padding: 12px 8px;
+  border-radius: var(--cd-radius-md);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: var(--cd-shadow-sm);
+  transition: var(--cd-transition);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cd-subnav-btn:hover {
+  background: #f1f5f9;
+  color: var(--cd-text-main);
+}
+
+.cd-subnav-btn.active {
+  background: var(--cd-text-main);
+  color: #ffffff;
+  border-color: var(--cd-text-main);
+}
+
+/* Viewport Layout Frame Injection Rules */
+.cd-subtab-viewport-card {
+  background: var(--cd-card-bg);
+  border-radius: var(--cd-radius-lg);
+  border: 1px solid var(--cd-border);
+  box-shadow: var(--cd-shadow-md);
+  padding: 10px;
+}
+
+/* Layout inputs fields resets */
+.cd-subtab-viewport-card input,
+.cd-subtab-viewport-card select,
+.cd-subtab-viewport-card textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius-sm);
+  background-color: var(--cd-bg);
+  font-size: 0.92rem;
+  margin-top: 6px;
+  margin-bottom: 16px;
+  transition: var(--cd-transition);
+}
+
+.cd-subtab-viewport-card input:focus,
+.cd-subtab-viewport-card select:focus {
+  outline: none;
+  border-color: var(--cd-primary);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ===== Loan View Dashboard Frame Settings ===== */
+.cd-loans-container {
+  background: var(--cd-card-bg);
+  border-radius: var(--cd-radius-lg);
+  padding: 16px;
+  border: 1px solid var(--cd-border);
+  box-shadow: var(--cd-shadow-md);
+}
+
+.cd-loans-container h1 {
+  margin: 0 0 4px 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.cd-loans-container p {
+  margin: 0 0 20px 0;
+  font-size: 0.85rem;
+  color: var(--cd-text-muted);
+}
+
+.cd-loans-table-wrapper {
+  margin: 0 -16px;
+  overflow-x: auto;
+  padding: 0 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cd-loans-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 650px;
+}
+
+.cd-loans-table th {
+  background: var(--cd-bg);
+  font-weight: 700;
+  color: var(--cd-text-muted);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--cd-border);
+}
+
+.cd-loans-table td {
+  padding: 16px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--cd-border);
+  color: var(--cd-text-main);
+  vertical-align: middle;
+}
+
+.cd-td-loan-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cd-loan-avatar {
+  width: 32px;
+  height: 32px;
+  background: var(--cd-bg);
+  border-radius: var(--cd-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cd-currency-weight {
+  font-weight: 700;
+  color: var(--cd-text-main);
+}
+
+.cd-apply-now-btn {
+  background: var(--cd-primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--cd-radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--cd-transition);
+}
+
+.cd-apply-now-btn:hover {
+  background: var(--cd-primary-hover);
+}
+
+.cd-view-details {
+  background: var(--cd-primary-light);
+  color: var(--cd-primary);
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--cd-radius-sm);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: var(--cd-transition);
+}
+
+.cd-view-details:hover {
+  background: var(--cd-primary);
+  color: #ffffff;
+}
+
+/* Badges Status Classes Engine mapping */
+.cd-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--cd-radius-sm);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.cd-status-pending {
+  background: var(--cd-pending-bg);
+  color: var(--cd-pending);
+}
+
+.cd-status-approved {
+  background: var(--cd-approved-bg);
+  color: var(--cd-approved);
+}
+
+.cd-status-rejected {
+  background: var(--cd-rejected-bg);
+  color: var(--cd-rejected);
+}
+
+.cd-status-disbursed {
+  background: var(--cd-disbursed-bg);
+  color: var(--cd-disbursed);
+}
+
+/* Global system states screen loaders */
+.cd-loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: var(--cd-bg);
+  font-weight: 600;
+  color: var(--cd-text-muted);
+}
+
+.cd-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--cd-border);
+  border-top-color: var(--cd-primary);
+  border-radius: 50%;
+  animation: spinner 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   DESKTOP RESPONSIVE ENGINEERING VIEWPORTS (WIDTH > 768px)
+   ========================================================================== */
+@media (min-width: 769px) {
+  .cd-root {
+    flex-direction: row;
+    padding-bottom: 0;
+  }
+
+  .cd-mobile-nav {
+    display: none;
+  }
+
+  .cd-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 280px;
+    background: #ffffff;
+    border-right: 1px solid var(--cd-border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+  }
+
+  .cd-sidebar-header {
+    padding: 28px 24px;
+    border-bottom: 1px solid var(--cd-border);
+  }
+
+  .cd-logo {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--cd-text-main);
+    letter-spacing: -0.5px;
+  }
+
+  .cd-logo span {
+    color: var(--cd-primary);
+  }
+
+  .cd-sidebar-nav {
+    flex: 1;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cd-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    color: var(--cd-text-muted);
+    font-size: 0.92rem;
+    font-weight: 600;
+    border-radius: var(--cd-radius-md);
+    cursor: pointer;
+    text-align: left;
+    transition: var(--cd-transition);
+  }
+
+  .cd-nav-item:hover {
+    background: var(--cd-bg);
+    color: var(--cd-text-main);
+  }
+
+  .cd-nav-item.active {
+    background: var(--cd-primary-light);
+    color: var(--cd-primary);
+  }
+
+  .cd-main {
+    padding: 40px;
+    max-width: calc(100% - 280px);
+  }
+
+  .cd-header {
+    padding: 28px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .cd-header-meta {
+    flex: 1;
+  }
+
+  .cd-header h1 {
+    font-size: 1.85rem;
+  }
+
+  .cd-progress-section {
+    min-width: 280px;
+  }
+
+  /* Desktop par grid ko hata kar 1 row me 4 inline buttons rakhega */
+  .cd-profile-subnav-grid {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--cd-border);
+    padding-bottom: 16px;
+  }
+
+  .cd-subnav-btn {
+    width: auto;
+    padding: 10px 20px;
+  }
+
+  .cd-subtab-viewport-card {
+    padding: 32px;
+  }
+
+  .cd-loans-container {
+    padding: 32px;
+  }
+}
+
+/* ==========================================================================
+   DOCUMENT VAULT WITH PREMIUM PREVIEW DESIGN ENGINE Extensions
+   ========================================================================== */
+
+.cd-doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.cd-doc-preview-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--cd-radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: var(--cd-transition);
+}
+
+.cd-doc-preview-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--cd-shadow-md);
+  border-color: #cbd5e1;
+}
+
+.cd-doc-thumb-wrapper {
+  position: relative;
+  height: 110px;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.cd-doc-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cd-doc-icon-placeholder {
+  font-size: 36px;
+}
+
+.cd-doc-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.cd-doc-badge.verified {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.cd-doc-badge.pending {
+  background: #fffee0;
+  color: #a16207;
+}
+
+.cd-doc-meta {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cd-doc-meta h4 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--cd-text-main);
+}
+
+.cd-doc-meta span {
+  font-size: 0.72rem;
+  color: var(--cd-text-muted);
+}
+
+.cd-doc-view-link {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--cd-primary);
+  text-decoration: none;
+  margin-top: 6px;
+}
+
+/* LIVE PREVIEW CONTAINER COMPONENT */
+.cd-live-preview-box {
+  background: #eff6ff;
+  border: 1px dashed #bfdbfe;
+  padding: 12px;
+  border-radius: var(--cd-radius-md);
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cd-preview-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--cd-primary);
+  margin-bottom: 8px;
+}
+
+.cd-preview-img-frame {
+  width: 100%;
+  max-width: 220px;
+  height: 140px;
+  border-radius: var(--cd-radius-sm);
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+}
+
+.cd-preview-img-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ==========================================================================
+   STRICT TWO-COLUMN PREVIEW ENGINE DESIGN
+   ========================================================================== */
+
+.cd-doc-two-column-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr) !important;
+  /* Forces 2-columns everywhere */
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (min-width: 769px) {
+  .cd-doc-two-column-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    /* Remains solid 2 columns on desktop too */
+    gap: 20px;
+  }
+}
+
+.cd-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.cd-message.success {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.cd-message.error {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}

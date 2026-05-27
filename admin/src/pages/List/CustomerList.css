@@ -1,0 +1,321 @@
+/* Container Reset & Global Styles */
+.customer-container {
+  width: 100%;
+  padding: 32px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Header Area styling */
+.customer-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.customer-container h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* Professional Alerts */
+.error,
+.success {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+/* Dynamic Grid Layout */
+.customer-grid {
+  display: grid;
+  grid-template-columns: 100%;
+  gap: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active split layout when editing customer data */
+.customer-grid.split-layout {
+  grid-template-columns: 35% 65%;
+}
+
+@media (max-width: 1024px) {
+  .customer-grid.split-layout {
+    grid-template-columns: 100%;
+  }
+}
+
+/* Search Box Container */
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+}
+
+.search-box {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  font-size: 14px;
+  color: #0f172a;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.search-box:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+/* Professional Cards */
+.edit-box,
+.table-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.table-card {
+  padding: 0;
+  /* Let table elements stretch to edges */
+  overflow: hidden;
+}
+
+.edit-box {
+  padding: 24px;
+  position: sticky;
+  top: 94px;
+}
+
+.edit-box h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 600;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.edit-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.edit-box input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.edit-box input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+/* Button Group Setup */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.form-actions button {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  flex: 1;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Modern Datatable Structure */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.customer-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.customer-table thead {
+  background: #f8fafc;
+}
+
+.customer-table th {
+  padding: 14px 20px;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #edf2f7;
+}
+
+.customer-table td {
+  padding: 16px 20px;
+  color: #334155;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.customer-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* Badges for Unique Ids & PAN Data */
+.badge-id {
+  font-family: monospace;
+  background: #f1f5f9;
+  color: #334155;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.badge-pan {
+  font-family: monospace;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Table Row Controls */
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-table-edit,
+.btn-table-delete {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+
+.btn-table-edit {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.btn-table-edit:hover {
+  background: #dcfce7;
+}
+
+.btn-table-delete {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.btn-table-delete:hover {
+  background: #fee2e2;
+}
+
+/* Feedback Statuses */
+.loading-row,
+.empty-row {
+  text-align: center;
+  padding: 48px;
+  color: #64748b;
+  font-size: 15px;
+}
+
+/* Mobile Breakpoints adaptation */
+@media (max-width: 640px) {
+  .customer-container {
+    padding: 16px;
+  }
+
+  .customer-header-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-container {
+    max-width: 100%;
+  }
+}

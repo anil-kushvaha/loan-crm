@@ -1,0 +1,230 @@
+/* Container & Dashboard Layout */
+.employee-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 30px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+h1 {
+  color: #1e293b;
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* Two-Column Grid */
+.crm-grid {
+  display: grid;
+  grid-template-columns: 35% 65%;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Responsive Grid for Smaller Screens */
+@media (max-width: 1024px) {
+  .crm-grid {
+    grid-template-columns: 100%;
+  }
+}
+
+/* Professional Cards */
+.form-card,
+.list-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+}
+
+/* Keeps the form pinned to the top while scrolling long tables */
+.form-card {
+  position: sticky;
+  top: 24px;
+}
+
+h2 {
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 18px;
+}
+
+label {
+  display: block;
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #475569;
+}
+
+input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #0f172a;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+input::placeholder {
+  color: #94a3b8;
+}
+
+/* Professional Buttons */
+.btn-container {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+button {
+  font-weight: 500;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+/* Primary/Submit Button */
+button[type="submit"] {
+  background-color: #2563eb;
+  color: white;
+  flex: 1;
+}
+
+button[type="submit"]:hover {
+  background-color: #1d4ed8;
+}
+
+/* Cancel Button */
+button[type="button"] {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+button[type="button"]:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
+button:disabled {
+  background-color: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Table Actions Buttons */
+.btn-edit {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  padding: 6px 12px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+.btn-edit:hover {
+  background-color: #dcfce7;
+}
+
+.btn-delete {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.btn-delete:hover {
+  background-color: #fee2e2;
+}
+
+/* Messages & Feedback */
+.error-message {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.loading,
+.no-data {
+  text-align: center;
+  color: #64748b;
+  padding: 40px 20px;
+  font-size: 15px;
+}
+
+/* Modern CRM Responsive Table */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.employee-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+
+.employee-table th {
+  background-color: #f8fafc;
+  color: #64748b;
+  font-weight: 600;
+  padding: 14px 16px;
+  border-bottom: 2px solid #edf2f7;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.employee-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.employee-table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Role Badge Style */
+.role-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #e0f2fe;
+  color: #0369a1;
+  text-transform: capitalize;
+}
