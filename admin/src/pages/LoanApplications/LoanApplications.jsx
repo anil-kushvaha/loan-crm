@@ -6,7 +6,7 @@ import debounce from "lodash/debounce";
 import "./LoanApplications.css";
 
 // Fallback to localhost if the environment variable is not defined
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const LoanApplications = () => {
   const [applications, setApplications] = useState([]);
