@@ -3,7 +3,7 @@ import Applicant from "../models/applicant.model.js";
 import Enquiry from "../models/enquiry.model.js";
 import { asyncHandler } from "../middlewares/errorHandler.js";
 import { generateToken } from "../middlewares/auth.js";
-import { sendLoginCredentials } from "../utils/email.js"; // ✅ ADDED
+import { sendLoginCredentials } from "../utils/email.js";
 
 // =======================
 // GENERATE CUSTOMER ID
@@ -36,7 +36,6 @@ export const convertEnquiryToCustomer = asyncHandler(async (req, res) => {
     });
   }
 
-  // Prevent duplicate conversion
   if (enquiry.converted) {
     return res.status(400).json({
       success: false,
@@ -44,7 +43,7 @@ export const convertEnquiryToCustomer = asyncHandler(async (req, res) => {
     });
   }
 
-  // Existing customer check
+  // Check existing user
   const existingUser = await User.findOne({ email: enquiry.email });
   if (existingUser) {
     return res.status(400).json({
@@ -73,18 +72,20 @@ export const convertEnquiryToCustomer = asyncHandler(async (req, res) => {
   const customer = await User.create({
     name: fullName || enquiry.fullName,
     email: enquiry.email,
-    password,
+    password: password,
     role: "customer",
     mobile: mobile || enquiry.mobile,
     panNumber: panNumber || enquiry.panNumber || "",
     applicantId: applicant._id,
   });
 
-  // MARK ENQUIRY CONVERTED
+  // Mark enquiry converted
   enquiry.converted = true;
   await enquiry.save();
 
-  // ========== SEND EMAIL ==========
+  // =======================
+  // EMAIL SEND (FIXED)
+  // =======================
   try {
     await sendLoginCredentials(
       customer.email,
@@ -92,16 +93,15 @@ export const convertEnquiryToCustomer = asyncHandler(async (req, res) => {
       customer.email,
       password,
     );
-    console.log(`✅ Welcome email sent to ${customer.email}`);
-  } catch (emailErr) {
-    console.error("❌ Failed to send email:", emailErr.message);
-    // Email failure does NOT block the response
+    console.log("✅ Email sent successfully to:", customer.email);
+  } catch (err) {
+    console.log("❌ Email failed:", err.message);
   }
-  // =================================
 
+  // Generate token
   const token = generateToken(customer._id);
 
-  res.status(201).json({
+  return res.status(201).json({
     success: true,
     message: "Customer created successfully",
     data: {
@@ -142,6 +142,7 @@ export const updateCustomer = asyncHandler(async (req, res) => {
   const { name, mobile, panNumber, password } = req.body;
 
   const customer = await User.findOne({ _id: id, role: "customer" });
+
   if (!customer) {
     return res.status(404).json({
       success: false,
@@ -149,13 +150,10 @@ export const updateCustomer = asyncHandler(async (req, res) => {
     });
   }
 
-  if (typeof name === "string" && name.trim()) customer.name = name.trim();
-  if (typeof mobile === "string" && mobile.trim())
-    customer.mobile = mobile.trim();
-  if (typeof panNumber === "string") customer.panNumber = panNumber.trim();
-  if (typeof password === "string" && password.trim().length > 0) {
-    customer.password = password.trim();
-  }
+  if (name) customer.name = name.trim();
+  if (mobile) customer.mobile = mobile.trim();
+  if (panNumber !== undefined) customer.panNumber = panNumber.trim();
+  if (password) customer.password = password.trim();
 
   await customer.save();
 
@@ -177,7 +175,9 @@ export const updateCustomer = asyncHandler(async (req, res) => {
 // =======================
 export const deleteCustomer = asyncHandler(async (req, res) => {
   const { id } = req.params;
+
   const customer = await User.findOne({ _id: id, role: "customer" });
+
   if (!customer) {
     return res.status(404).json({
       success: false,
@@ -188,6 +188,7 @@ export const deleteCustomer = asyncHandler(async (req, res) => {
   if (customer.applicantId) {
     await Applicant.findByIdAndDelete(customer.applicantId);
   }
+
   await customer.deleteOne();
 
   res.status(200).json({
