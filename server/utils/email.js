@@ -1,23 +1,25 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: false, // always false for 587
+  host: "smtp.gmail.com", // ✅ HARD CODE (MOST STABLE FIX)
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
-// test connection
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("❌ Email Server Error:", error);
-  } else {
-    console.log("✅ Email Server Ready");
-  }
-});
+// verify only after env load
+setTimeout(() => {
+  transporter.verify((error) => {
+    if (error) {
+      console.log("❌ Email Server Error:", error);
+    } else {
+      console.log("✅ Email Server Ready");
+    }
+  });
+}, 3000);
 
 export const sendLoginCredentials = async (to, name, email, password) => {
   try {
@@ -28,7 +30,7 @@ export const sendLoginCredentials = async (to, name, email, password) => {
       html: `
         <div style="font-family: Arial; padding: 20px;">
           <h2>Welcome ${name}</h2>
-          <p>Your account has been created.</p>
+          <p>Your account has been created successfully.</p>
 
           <h3>Login Details:</h3>
           <p><b>Email:</b> ${email}</p>
@@ -47,8 +49,8 @@ export const sendLoginCredentials = async (to, name, email, password) => {
       `,
     });
 
-    console.log("✅ Email sent successfully");
+    console.log("✅ Email sent successfully to:", to);
   } catch (error) {
-    console.log("❌ Email Send Error:", error);
+    console.log("❌ Email Send Error:", error.message);
   }
 };
