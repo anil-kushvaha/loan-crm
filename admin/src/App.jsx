@@ -8,6 +8,8 @@ import "./App.css";
 import Navbar from "./components/Navbar/Navbar";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Login from "./pages/Login";
+import SetPassword from "./pages/SetPassword";      // ✅ Naya import
+
 import ProtectedRoute from "./ProtectedRoute";
 
 // Admin/Employee pages
@@ -16,6 +18,7 @@ import List from "./pages/List/List";
 import ConvertEnquiry from "./pages/inEnquiry/Enquiry";
 import LoanApplications from "./pages/LoanApplications/LoanApplications";
 import EnquiryForm from "./pages/Enquiry/EnquiryForm"; // ✅ already imported
+
 
 // Customer Dashboard
 import CustomerDashboard from "./components/customer/CustomerDashboard";
@@ -38,6 +41,8 @@ const App = () => {
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/enquiry" element={<EnquiryForm />} />  {/* ✅ Add this line */}
+                <Route path="/set-password" element={<SetPassword />} />   {/* ✅ New route */}
+
 
         {/* Customer routes */}
         <Route

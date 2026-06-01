@@ -7,34 +7,36 @@ export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email and password required" });
+    return res.status(400).json({
+      success: false,
+      message: "Email and password required",
+    });
   }
 
-  const user = await User.findOne({ email });
+  // Populate applicantId to get customerId in one query
+  const user = await User.findOne({ email }).populate("applicantId");
+
   if (!user) {
-    return res
-      .status(401)
-      .json({ success: false, message: "Invalid credentials" });
+    return res.status(401).json({
+      success: false,
+      message: "Invalid credentials",
+    });
   }
 
   const isMatch = await user.comparePassword(password);
   if (!isMatch) {
-    return res
-      .status(401)
-      .json({ success: false, message: "Invalid credentials" });
+    return res.status(401).json({
+      success: false,
+      message: "Invalid credentials",
+    });
   }
 
-  // ✅ For customers, fetch the linked applicant to get customerId
   let customerId = null;
   let applicantId = null;
+
   if (user.role === "customer" && user.applicantId) {
-    const applicant = await Applicant.findById(user.applicantId);
-    if (applicant) {
-      customerId = applicant.customerId;
-      applicantId = applicant._id;
-    }
+    customerId = user.applicantId.customerId;
+    applicantId = user.applicantId._id;
   }
 
   const token = generateToken(user._id);
@@ -49,8 +51,8 @@ export const login = asyncHandler(async (req, res) => {
         email: user.email,
         role: user.role,
         mobile: user.mobile || "",
-        customerId: customerId, // e.g., "CUST-1A2B3C4D-EFGH"
-        applicantId: applicantId, // MongoDB _id of the applicant
+        customerId: customerId,
+        applicantId: applicantId,
       },
     },
   });

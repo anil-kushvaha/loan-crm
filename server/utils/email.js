@@ -42,7 +42,7 @@ export const sendWelcomeEmailWithResetLink = async (
     return false;
   }
 
-  const finalFrom = fromEmail || "noreply@yourdomain.com"; // Fallback, but should be set in env
+  const finalFrom = fromEmail || "noreply@yourdomain.com";
   const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5174";
 
   const msg = {
@@ -83,16 +83,4 @@ export const sendWelcomeEmailWithResetLink = async (
     }
     return false;
   }
-};
-
-// Optional: Test function (only for development)
-export const testEmail = async () => {
-  if (isProduction) {
-    console.log("Test email disabled in production");
-    return false;
-  }
-  const testEmail = process.env.TEST_EMAIL || "test@example.com";
-  const testLink = "https://example.com/set-password?token=test123";
-  console.log("🧪 Sending test welcome email to", testEmail);
-  return await sendWelcomeEmailWithResetLink(testEmail, "Test User", testLink);
 };
