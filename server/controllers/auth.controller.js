@@ -67,26 +67,18 @@ export const login = asyncHandler(async (req, res) => {
 export const setPassword = asyncHandler(async (req, res) => {
   const { token, email, newPassword } = req.body;
 
-  if (!token || !email || !newPassword) {
-    return res.status(400).json({
-      success: false,
-      message: "Token, email, and new password are required",
-    });
-  }
-
-  // Minimum password strength check
-  if (newPassword.length < 6) {
-    return res.status(400).json({
-      success: false,
-      message: "Password must be at least 6 characters long",
-    });
-  }
-
-  const user = await User.findOne({
-    email,
-    passwordResetToken: token,
-    passwordResetExpires: { $gt: Date.now() },
-  });
+  const user = await User.findOneAndUpdate(
+    {
+      email,
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: Date.now() },
+    },
+    {
+      password: newPassword,
+      $unset: { passwordResetToken: "", passwordResetExpires: "" },
+    },
+    { new: true },
+  );
 
   if (!user) {
     return res.status(400).json({
@@ -95,15 +87,5 @@ export const setPassword = asyncHandler(async (req, res) => {
     });
   }
 
-  // Set new password (pre-save hook will hash it automatically)
-  user.password = newPassword;
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
-
-  await user.save();
-
-  res.status(200).json({
-    success: true,
-    message: "Password set successfully. You can now log in.",
-  });
+  res.json({ success: true, message: "Password set successfully." });
 });
