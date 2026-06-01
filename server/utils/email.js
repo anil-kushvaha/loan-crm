@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config();
 
-// Remove spaces from App Password (critical!)
+// Remove any spaces from the App Password (critical)
 const emailPass = (process.env.EMAIL_PASS || "").replace(/\s/g, "");
 
 const transporter = nodemailer.createTransport({
@@ -13,13 +13,13 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: emailPass,
   },
-  // ⏱️ Timeouts – prevent hanging
-  connectionTimeout: 5000,
-  greetingTimeout: 5000,
-  socketTimeout: 10000,
+  family: 4, // Force IPv4
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 20000,
 });
 
-// Verify once – non-blocking
+// Verify connection once (non‑blocking)
 transporter.verify((error) => {
   if (error) {
     console.error("❌ Email server error:", error.message);
