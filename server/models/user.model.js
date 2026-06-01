@@ -13,11 +13,14 @@ const userSchema = new mongoose.Schema(
     },
     mobile: { type: String, trim: true },
     applicantId: { type: mongoose.Schema.Types.ObjectId, ref: "Applicant" },
+    // ✅ ADD THESE TWO FIELDS:
+    passwordResetToken: { type: String, index: true },
+    passwordResetExpires: { type: Number }, // storing as timestamp (milliseconds)
   },
   { timestamps: true },
 );
 
-// ✅ Async pre-save hook – no `next` parameter, Mongoose handles it automatically
+// Pre-save hook to hash password
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
