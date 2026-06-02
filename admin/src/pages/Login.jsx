@@ -199,7 +199,7 @@ const Login = () => {
               required
             />
           </div>
-          <div className="auth-link">
+  <div className="auth-link">
   <Link to="/forgot-password">
     Forgot Password?
   </Link>

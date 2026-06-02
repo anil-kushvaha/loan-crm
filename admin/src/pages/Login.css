@@ -93,3 +93,23 @@ button:disabled {
 .auth-link a:hover {
   text-decoration: underline;
 }
+
+.auth-link {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -5px;
+  margin-bottom: 15px;
+}
+
+.auth-link a {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.auth-link a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}

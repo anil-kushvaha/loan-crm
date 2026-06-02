@@ -9,6 +9,8 @@ import Navbar from "./components/Navbar/Navbar";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Login from "./pages/Login";
 import SetPassword from "./pages/SetPassword";      // ✅ Naya import
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -42,6 +44,15 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/enquiry" element={<EnquiryForm />} />  {/* ✅ Add this line */}
                 <Route path="/set-password" element={<SetPassword />} />   {/* ✅ New route */}
+                <Route
+  path="/forgot-password"
+  element={<ForgotPassword />}
+/>
+
+<Route
+  path="/reset-password"
+  element={<ResetPassword />}
+/>
 
 
         {/* Customer routes */}
