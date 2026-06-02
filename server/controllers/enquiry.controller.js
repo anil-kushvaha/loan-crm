@@ -17,25 +17,32 @@ export const submitEnquiry = asyncHandler(async (req, res) => {
     agreeToUpdates,
   } = req.body;
 
-  if (!fullName || !email || !mobile) {
+  // Required Fields Validation
+  if (
+    !fullName ||
+    !panNumber ||
+    !email ||
+    !mobile ||
+    !ourServices ||
+    !serviceType
+  ) {
     return res.status(400).json({
       success: false,
-      message: "Full Name, Email and Mobile are required",
+      message:
+        "Full Name, PAN Number, Email, Mobile, Service and Service Type are required",
     });
   }
 
   const enquiry = await Enquiry.create({
     fullName,
-    panNumber: panNumber || "",
+    panNumber,
     email,
     mobile,
-    ourServices: ourServices || "LOANS",
-    serviceType: serviceType || "",
+    ourServices,
+    serviceType,
     referenceName: referenceName || "",
     referenceEmail: referenceEmail || "",
     agreeToUpdates: agreeToUpdates || false,
-
-    // IMPORTANT
     converted: false,
   });
 
@@ -51,19 +58,8 @@ export const submitEnquiry = asyncHandler(async (req, res) => {
 // =====================
 export const getAllEnquiries = asyncHandler(async (req, res) => {
   const enquiries = await Enquiry.find({
-    $or: [
-      {
-        converted: false,
-      },
-      {
-        converted: {
-          $exists: false,
-        },
-      },
-    ],
-  }).sort({
-    createdAt: -1,
-  });
+    $or: [{ converted: false }, { converted: { $exists: false } }],
+  }).sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,

@@ -82,6 +82,7 @@ export const getMyApplications = asyncHandler(async (req, res) => {
 });
 
 // Admin/Employee: get all applications (with pagination)
+// Admin/Employee: get all applications (with pagination)
 export const getAllApplications = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
@@ -90,7 +91,7 @@ export const getAllApplications = asyncHandler(async (req, res) => {
   const applications = await LoanApplication.find()
     .populate(
       "applicantId",
-      "customerId personalDetails.fullName personalDetails.email",
+      "customerId personalDetails.fullName personalDetails.email personalDetails.mobile",
     )
     .sort({ appliedAt: -1 })
     .skip(skip)
@@ -101,10 +102,14 @@ export const getAllApplications = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: applications,
-    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    },
   });
 });
-
 // Admin/Employee: update application status
 export const updateApplicationStatus = asyncHandler(async (req, res) => {
   const { applicationId } = req.params;

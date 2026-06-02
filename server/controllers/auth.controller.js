@@ -67,18 +67,11 @@ export const login = asyncHandler(async (req, res) => {
 export const setPassword = asyncHandler(async (req, res) => {
   const { token, email, newPassword } = req.body;
 
-  const user = await User.findOneAndUpdate(
-    {
-      email,
-      passwordResetToken: token,
-      passwordResetExpires: { $gt: Date.now() },
-    },
-    {
-      password: newPassword,
-      $unset: { passwordResetToken: "", passwordResetExpires: "" },
-    },
-    { new: true },
-  );
+  const user = await User.findOne({
+    email,
+    passwordResetToken: token,
+    passwordResetExpires: { $gt: Date.now() },
+  });
 
   if (!user) {
     return res.status(400).json({
@@ -87,5 +80,15 @@ export const setPassword = asyncHandler(async (req, res) => {
     });
   }
 
-  res.json({ success: true, message: "Password set successfully." });
+  user.password = newPassword;
+
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  await user.save(); // <-- pre-save hook chalega aur password hash hoga
+
+  res.json({
+    success: true,
+    message: "Password set successfully.",
+  });
 });

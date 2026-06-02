@@ -1,151 +1,228 @@
+import mongoose from "mongoose";
+import crypto from "crypto";
+
 import User from "../models/user.model.js";
 import Applicant from "../models/applicant.model.js";
 import Enquiry from "../models/enquiry.model.js";
+
 import { asyncHandler } from "../middlewares/errorHandler.js";
 import { generateToken } from "../middlewares/auth.js";
-import { sendWelcomeEmailWithResetLink } from "../utils/email.js";
-import crypto from "crypto";
 
-// =======================
-// GENERATE CUSTOMER ID (more robust)
-// =======================
+import {
+  sendWelcomeEmailWithResetLink,
+  sendLoginEmail,
+} from "../utils/email.js";
+
+// =====================================================
+// GENERATE CUSTOMER ID
+// =====================================================
 const generateCustomerId = () => {
-  // Use timestamp + random bytes + counter fallback to avoid collisions
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const randomBytes = crypto.randomBytes(4).toString("hex").toUpperCase();
-  return `CUST-${timestamp}-${randomBytes}`;
+  return `CUST-${Date.now()}-${crypto
+    .randomBytes(3)
+    .toString("hex")
+    .toUpperCase()}`;
 };
 
-// =======================
+// =====================================================
 // CONVERT ENQUIRY TO CUSTOMER
-// =======================
+// =====================================================
 export const convertEnquiryToCustomer = asyncHandler(async (req, res) => {
-  const { enquiryId, fullName, mobile } = req.body;
+  const session = await mongoose.startSession();
 
-  if (!enquiryId) {
-    return res.status(400).json({
-      success: false,
-      message: "Enquiry ID is required",
-    });
-  }
+  try {
+    session.startTransaction();
 
-  // Atomically find and update the enquiry to prevent race conditions
-  const enquiry = await Enquiry.findOneAndUpdate(
-    { _id: enquiryId, converted: false },
-    { converted: true },
-    { new: true },
-  );
+    const { enquiryId, fullName, mobile } = req.body;
 
-  if (!enquiry) {
-    return res.status(404).json({
-      success: false,
-      message: "Enquiry not found or already converted",
-    });
-  }
-
-  // Ensure enquiry has required fields
-  if (!enquiry.email || !enquiry.fullName) {
-    // Rollback conversion flag (optional, but good for data integrity)
-    await Enquiry.findByIdAndUpdate(enquiryId, { converted: false });
-    return res.status(400).json({
-      success: false,
-      message: "Enquiry missing email or full name. Cannot create customer.",
-    });
-  }
-
-  // Check if user already exists with this email
-  const existingUser = await User.findOne({ email: enquiry.email });
-  if (existingUser) {
-    // Rollback conversion flag
-    await Enquiry.findByIdAndUpdate(enquiryId, { converted: false });
-    return res.status(400).json({
-      success: false,
-      message: "Customer already exists with this email",
-    });
-  }
-
-  // Create applicant record
-  const applicant = await Applicant.create({
-    customerId: generateCustomerId(),
-    personalDetails: {},
-    completedSteps: {
-      personalDetails: false,
-      addressDetails: false,
-      employmentDetails: false,
-      coApplicants: false,
-      documents: false,
-    },
-    currentStep: 1,
-    profileCompletion: 0,
-    profileCompleted: false,
-  });
-
-  // Generate a secure one-time password reset token (instead of sending plain password)
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  const resetTokenExpiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-
-  // Create customer with a temporary random password (will be hashed by pre-save hook)
-  const tempPassword = crypto.randomBytes(12).toString("hex");
-  const customer = await User.create({
-    name: fullName?.trim() || enquiry.fullName,
-    email: enquiry.email,
-    password: tempPassword, // This will be hashed by your User model's pre-save middleware
-    role: "customer",
-    mobile: mobile?.trim() || enquiry.mobile || "",
-    panNumber: enquiry.panNumber || "",
-    applicantId: applicant._id,
-    passwordResetToken: resetToken,
-    passwordResetExpires: resetTokenExpiry,
-  });
-
-  // Send email with a secure set-password link (no plain password in email)
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5174";
-  const setPasswordLink = `${frontendUrl}/set-password?token=${resetToken}&email=${encodeURIComponent(customer.email)}`;
-
-  // Fire-and-forget email (non-blocking)
-  (async () => {
-    try {
-      await sendWelcomeEmailWithResetLink(
-        customer.email,
-        customer.name,
-        setPasswordLink,
-      );
-      console.log(`✅ Welcome email sent to ${customer.email}`);
-    } catch (err) {
-      console.error(`❌ Email failed to ${customer.email}: ${err.message}`);
-      // Optional: store a flag in DB for retry
+    if (!enquiryId) {
+      return res.status(400).json({
+        success: false,
+        message: "Enquiry ID is required",
+      });
     }
-  })();
 
-  // Generate auth token and respond immediately
-  const token = generateToken(customer._id);
+    const enquiry = await Enquiry.findOne({
+      _id: enquiryId,
+    }).session(session);
 
-  return res.status(201).json({
-    success: true,
-    message:
-      "Customer created successfully. A password setup link has been sent to their email.",
-    data: {
-      user: {
-        id: customer._id,
-        name: customer.name,
-        email: customer.email,
-        role: customer.role,
-        mobile: customer.mobile,
+    if (!enquiry) {
+      return res.status(404).json({
+        success: false,
+        message: "Enquiry not found",
+      });
+    }
+
+    if (enquiry.converted) {
+      return res.status(400).json({
+        success: false,
+        message: "Enquiry already converted",
+      });
+    }
+
+    if (!enquiry.email) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer email is required",
+      });
+    }
+
+    const email = enquiry.email.toLowerCase().trim();
+
+    // ====================================
+    // EXISTING CUSTOMER CHECK
+    // ====================================
+    const existingUser = await User.findOne({
+      email,
+    }).session(session);
+
+    if (existingUser) {
+      await session.commitTransaction();
+      session.endSession();
+
+      sendLoginEmail(existingUser.email, existingUser.name).catch((err) => {
+        console.error("Login email error:", err.message);
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Customer already exists. Login email sent.",
+        data: {
+          user: {
+            id: existingUser._id,
+            name: existingUser.name,
+            email: existingUser.email,
+            mobile: existingUser.mobile,
+            role: existingUser.role,
+          },
+          applicantId: existingUser.applicantId,
+        },
+      });
+    }
+
+    // ====================================
+    // CREATE APPLICANT
+    // ====================================
+    const applicant = await Applicant.create(
+      [
+        {
+          customerId: generateCustomerId(),
+
+          personalDetails: {},
+
+          completedSteps: {
+            personalDetails: false,
+            addressDetails: false,
+            employmentDetails: false,
+            coApplicants: false,
+            documents: false,
+          },
+
+          currentStep: 1,
+          profileCompletion: 0,
+          profileCompleted: false,
+        },
+      ],
+      { session },
+    );
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    const tempPassword = crypto.randomBytes(16).toString("hex");
+
+    const customer = await User.create(
+      [
+        {
+          name: fullName?.trim() || enquiry.fullName || "Customer",
+
+          email,
+
+          password: tempPassword,
+
+          role: "customer",
+
+          mobile: mobile?.trim() || enquiry.mobile || "",
+
+          panNumber: enquiry.panNumber || "",
+
+          applicantId: applicant[0]._id,
+
+          passwordResetToken: resetToken,
+
+          passwordResetExpires: Date.now() + 24 * 60 * 60 * 1000,
+        },
+      ],
+      { session },
+    );
+
+    enquiry.converted = true;
+    await enquiry.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    // ====================================
+    // SEND EMAIL ASYNC
+    // ====================================
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+    const setPasswordLink =
+      `${frontendUrl}/set-password` +
+      `?token=${resetToken}` +
+      `&email=${encodeURIComponent(email)}`;
+
+    sendWelcomeEmailWithResetLink(
+      email,
+      customer[0].name,
+      setPasswordLink,
+    ).catch((err) => {
+      console.error("Email send failed:", err.message);
+    });
+
+    const token = generateToken(customer[0]._id);
+
+    return res.status(201).json({
+      success: true,
+      message: "Customer created successfully. Password setup email sent.",
+      data: {
+        user: {
+          id: customer[0]._id,
+          name: customer[0].name,
+          email: customer[0].email,
+          mobile: customer[0].mobile,
+          role: customer[0].role,
+        },
+
+        applicantId: applicant[0]._id,
+
+        token,
       },
-      applicantId: applicant._id,
-      token,
-    },
-  });
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to convert enquiry to customer",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
 });
 
-// =======================
+// =====================================================
 // GET ALL CUSTOMERS
-// =======================
+// =====================================================
 export const getAllCustomers = asyncHandler(async (req, res) => {
-  const customers = await User.find({ role: "customer" })
+  const customers = await User.find({
+    role: "customer",
+  })
     .select("-password -passwordResetToken -passwordResetExpires")
-    .populate("applicantId", "customerId profileCompletion")
-    .sort({ createdAt: -1 });
+    .populate("applicantId", "customerId profileCompletion profileCompleted")
+    .sort({
+      createdAt: -1,
+    });
 
   res.status(200).json({
     success: true,
@@ -154,14 +231,16 @@ export const getAllCustomers = asyncHandler(async (req, res) => {
   });
 });
 
-// =======================
+// =====================================================
 // UPDATE CUSTOMER
-// =======================
+// =====================================================
 export const updateCustomer = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, mobile, panNumber } = req.body; // Password updates should go through a dedicated "change password" endpoint
 
-  const customer = await User.findOne({ _id: id, role: "customer" });
+  const customer = await User.findOne({
+    _id: id,
+    role: "customer",
+  });
 
   if (!customer) {
     return res.status(404).json({
@@ -170,19 +249,23 @@ export const updateCustomer = asyncHandler(async (req, res) => {
     });
   }
 
-  if (name) customer.name = name.trim();
+  const { name, mobile, panNumber } = req.body;
+
+  if (name) {
+    customer.name = name.trim();
+  }
+
   if (mobile) {
-    // Add mobile validation (e.g., regex) here if needed
     customer.mobile = mobile.trim();
   }
+
   if (panNumber !== undefined) {
-    // Add PAN format validation
     customer.panNumber = panNumber.trim();
   }
 
   await customer.save();
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Customer updated successfully",
     data: {
@@ -195,13 +278,16 @@ export const updateCustomer = asyncHandler(async (req, res) => {
   });
 });
 
-// =======================
+// =====================================================
 // DELETE CUSTOMER
-// =======================
+// =====================================================
 export const deleteCustomer = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const customer = await User.findOne({ _id: id, role: "customer" });
+  const customer = await User.findOne({
+    _id: id,
+    role: "customer",
+  });
 
   if (!customer) {
     return res.status(404).json({
@@ -214,10 +300,9 @@ export const deleteCustomer = asyncHandler(async (req, res) => {
     await Applicant.findByIdAndDelete(customer.applicantId);
   }
 
-  // Use deleteOne() or remove() – ensure any hooks you need are triggered
   await customer.deleteOne();
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Customer deleted successfully",
   });

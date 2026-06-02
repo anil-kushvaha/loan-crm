@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
+import { Link } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_BASE_URL;
 
@@ -198,6 +199,11 @@ const Login = () => {
               required
             />
           </div>
+          <div className="auth-link">
+  <Link to="/forgot-password">
+    Forgot Password?
+  </Link>
+</div>
 
           <button
             type="submit"
