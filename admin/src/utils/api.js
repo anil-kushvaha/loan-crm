@@ -59,16 +59,18 @@ export const apiRequest = async ({
 // UPLOAD FILE
 // ==============================
 export const uploadFile = async (applicantId, formData) => {
-  if (!applicantId) {
-    throw new Error("Applicant ID required");
-  }
-
-  return apiRequest({
-    endpoint: `/v1/applicant/documents/${applicantId}`,
-    method: "POST",
-    body: formData,
-    isFormData: true,
-  });
+  const token = localStorage.getItem("token");
+  const res = await fetch(
+    `${API_BASE_URL}/v1/applicant/documents/${applicantId}`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    },
+  );
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message);
+  return data;
 };
 
 // ==============================

@@ -397,3 +397,97 @@
     width: 100%;
   }
 }
+
+/* New buttons */
+.btn-review,
+.btn-doc-select {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin-left: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-review:hover,
+.btn-doc-select:hover {
+  background-color: #4338ca;
+}
+
+.btn-single-download {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  margin-left: 12px;
+}
+
+.btn-download-zip {
+  background-color: #2563eb;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 12px;
+}
+
+.btn-cancel {
+  background-color: #6b7280;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.doc-select-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.doc-modal-actions {
+  margin-top: 20px;
+  text-align: right;
+}
+
+.large-modal {
+  width: 80%;
+  max-width: 900px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.review-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.full-profile-content h3,
+.full-profile-content h4 {
+  margin: 16px 0 8px;
+  border-left: 4px solid #2563eb;
+  padding-left: 10px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.document-item {
+  background: #f9fafb;
+  padding: 6px 10px;
+  margin: 5px 0;
+  border-radius: 6px;
+}
