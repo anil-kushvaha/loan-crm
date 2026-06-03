@@ -7,14 +7,13 @@ import "./LoanApplications.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// ---------- Modal to select files from a ZIP ----------
+// ---------- Premium File Selector Modal (FIXED) ----------
 const ZipContentSelector = ({ isOpen, onClose, zipBlob, customerId, onDownload }) => {
   const [files, setFiles] = useState([]);
   const [selected, setSelected] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Load ZIP contents when modal opens
   useEffect(() => {
     if (!isOpen || !zipBlob) return;
     const loadZip = async () => {
@@ -30,7 +29,6 @@ const ZipContentSelector = ({ isOpen, onClose, zipBlob, customerId, onDownload }
           }
         });
         setFiles(fileList);
-        // Pre-select all files by default
         const initialSelected = {};
         fileList.forEach((file) => {
           initialSelected[file.path] = true;
@@ -86,7 +84,7 @@ const ZipContentSelector = ({ isOpen, onClose, zipBlob, customerId, onDownload }
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      onClose(); // close modal after download
+      onClose();
     } catch (err) {
       console.error("Error creating new ZIP", err);
       alert("Failed to create ZIP with selected files.");
@@ -98,46 +96,77 @@ const ZipContentSelector = ({ isOpen, onClose, zipBlob, customerId, onDownload }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container document-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>×</button>
-        <h3>Select Files to Download</h3>
-        {loading && <div className="loading-skeleton">Loading ZIP contents...</div>}
-        {error && <div className="error-card">{error}</div>}
-        {!loading && !error && (
-          <>
-            <div className="select-all-row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  ref={(input) => {
-                    if (input) input.indeterminate = someSelected && !allSelected;
-                  }}
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                />
-                Select All
-              </label>
-            </div>
-            <div className="documents-list" style={{ maxHeight: "300px", overflowY: "auto" }}>
-              {files.map((file) => (
-                <label key={file.path} className="doc-checkbox">
+      <div className="modal-container enhanced-detail-modal document-modal-premium" onClick={(e) => e.stopPropagation()}>
+        
+        {/* Premium Header Layout */}
+        <div className="modal-header-premium">
+          <div className="header-title-area">
+            <span className="badge-loan-type">Attachments</span>
+            <h2>Select Files to Download</h2>
+            <p className="modal-id-subtitle">Customer ID: {customerId}</p>
+          </div>
+          <button className="modal-close-premium" onClick={onClose}>×</button>
+        </div>
+
+        <div className="modal-body-premium">
+          {loading && <div className="loading-skeleton">Loading ZIP contents...</div>}
+          {error && <div className="error-card">{error}</div>}
+          
+          {!loading && !error && (
+            <>
+              {/* Premium Select All Panel */}
+              <div className="select-all-panel">
+                <label className="premium-checkbox-label">
                   <input
                     type="checkbox"
-                    checked={!!selected[file.path]}
-                    onChange={(e) => handleCheck(file.path, e.target.checked)}
+                    className="premium-checkbox"
+                    checked={allSelected}
+                    ref={(input) => {
+                      if (input) input.indeterminate = someSelected && !allSelected;
+                    }}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
                   />
-                  {file.name}
+                  <div className="checkbox-text-group">
+                    <span className="main-label">Select All Files</span>
+                    <span className="sub-label">Check or uncheck all items at once</span>
+                  </div>
                 </label>
-              ))}
-            </div>
-            <div className="modal-actions">
-              <button className="btn-cancel" onClick={onClose}>Cancel</button>
-              <button className="btn-download" onClick={handleDownloadSelected}>
-                Download Selected ({Object.values(selected).filter(Boolean).length} files)
-              </button>
-            </div>
-          </>
-        )}
+              </div>
+
+              {/* Document List Stack */}
+              <div className="documents-list-stack">
+                {files.map((file) => (
+                  <label key={file.path} className="premium-document-item">
+                    <input
+                      type="checkbox"
+                      className="premium-checkbox"
+                      checked={!!selected[file.path]}
+                      onChange={(e) => handleCheck(file.path, e.target.checked)}
+                    />
+                    <div className="file-info">
+                      <span className="file-name">{file.name}</span>
+                      <span className="file-path">{file.path}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Premium Footer Design */}
+        <div className="modal-footer-premium">
+          <button className="btn-modal-dismiss margin-right-auto" onClick={onClose}>
+            Cancel
+          </button>
+          <button 
+            className="btn-premium-action" 
+            onClick={handleDownloadSelected}
+            disabled={loading || error || Object.values(selected).filter(Boolean).length === 0}
+          >
+            Download Selected ({Object.values(selected).filter(Boolean).length})
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -157,7 +186,6 @@ const LoanApplications = () => {
   const [currentZipBlob, setCurrentZipBlob] = useState(null);
   const [currentCustomerId, setCurrentCustomerId] = useState(null);
 
-  // Fetch all loan applications
   const fetchApplications = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -187,7 +215,6 @@ const LoanApplications = () => {
     []
   );
 
-  // Update loan status
   const updateStatus = async (appId, newStatus) => {
     try {
       const token = localStorage.getItem("token");
@@ -210,7 +237,6 @@ const LoanApplications = () => {
     }
   };
 
-  // Export single loan application as PDF (using html2canvas)
   const exportLoanPDF = async (app) => {
     if (actionInProgress === app._id) return;
     setActionInProgress(app._id);
@@ -237,7 +263,6 @@ const LoanApplications = () => {
     }, 100);
   };
 
-  // Download full profile: fetch backend ZIP, unzip, show file selector
   const downloadFullProfileWithSelection = async (application) => {
     if (actionInProgress === application._id) return;
     setActionInProgress(application._id);
@@ -268,7 +293,6 @@ const LoanApplications = () => {
     }
   };
 
-  // Filtering logic
   const filteredApps = applications.filter((app) => {
     if (statusFilter !== "ALL" && app.status !== statusFilter) return false;
     if (loanTypeFilter !== "ALL" && app.loanType !== loanTypeFilter) return false;
@@ -408,41 +432,65 @@ const LoanApplications = () => {
                     >
                       {actionInProgress === app._id ? "..." : "Full Profile"}
                     </button>
-                   </td>
-                 </tr>
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
 
-      {/* Modal for loan application details (existing) */}
+      {/* Details View Modal */}
       {selectedApp && (
         <div className="modal-overlay" onClick={() => setSelectedApp(null)}>
-          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedApp(null)}>×</button>
-            <div id="application-modal-content">
-              <div className="modal-header">
-                <h2>Loan Application Details</h2>
+          <div className="modal-container enhanced-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-premium">
+              <div className="header-title-area">
+                <span className="badge-loan-type">{loanTypeLabels[selectedApp.loanType]}</span>
+                <h2>Application Review</h2>
+                <p className="modal-id-subtitle">Customer ID: {selectedApp.customerId}</p>
               </div>
-              <div className="modal-body">
-                <div className="detail-section">
-                  <h3>Applicant Information</h3>
-                  <div className="detail-grid">
-                    <div><strong>Name:</strong> {selectedApp.applicantId?.personalDetails?.fullName}</div>
-                    <div><strong>Email:</strong> {selectedApp.applicantId?.personalDetails?.email}</div>
-                    <div><strong>Mobile:</strong> {selectedApp.applicantId?.personalDetails?.mobile}</div>
-                    <div><strong>PAN:</strong> {selectedApp.applicantId?.personalDetails?.panCard || "—"}</div>
-                    <div><strong>Customer ID:</strong> {selectedApp.customerId}</div>
+              <button className="modal-close-premium" onClick={() => setSelectedApp(null)}>×</button>
+            </div>
+
+            <div id="application-modal-content" className="modal-body-premium">
+              <div className="detail-card-section">
+                <h3>Applicant Information</h3>
+                <div className="premium-data-grid">
+                  <div className="grid-item">
+                    <label>Full Name</label>
+                    <span>{selectedApp.applicantId?.personalDetails?.fullName || "—"}</span>
+                  </div>
+                  <div className="grid-item">
+                    <label>Email Address</label>
+                    <span className="text-lowercase">{selectedApp.applicantId?.personalDetails?.email || "—"}</span>
+                  </div>
+                  <div className="grid-item">
+                    <label>Mobile Number</label>
+                    <span>{selectedApp.applicantId?.personalDetails?.mobile || "—"}</span>
+                  </div>
+                  <div className="grid-item">
+                    <label>PAN Card</label>
+                    <span className="text-uppercase">{selectedApp.applicantId?.personalDetails?.panCard || "—"}</span>
                   </div>
                 </div>
-                <div className="detail-section">
-                  <h3>Loan Information</h3>
-                  <div className="detail-grid">
-                    <div><strong>Loan Type:</strong> {loanTypeLabels[selectedApp.loanType]}</div>
-                    <div><strong>Applied On:</strong> {new Date(selectedApp.appliedAt).toLocaleString()}</div>
-                    <div><strong>Status:</strong>
-                      <select value={selectedApp.status} onChange={(e) => updateStatus(selectedApp._id, e.target.value)}>
+              </div>
+
+              <div className="detail-card-section">
+                <h3>Loan Status & Timeline</h3>
+                <div className="premium-data-grid status-grid-layout">
+                  <div className="grid-item">
+                    <label>Applied On</label>
+                    <span>{new Date(selectedApp.appliedAt).toLocaleString()}</span>
+                  </div>
+                  <div className="grid-item">
+                    <label>Application Status</label>
+                    <div className="custom-select-wrapper">
+                      <select 
+                        className={`status-interactive-select ${selectedApp.status.toLowerCase()}`}
+                        value={selectedApp.status} 
+                        onChange={(e) => updateStatus(selectedApp._id, e.target.value)}
+                      >
                         <option value="PENDING">PENDING</option>
                         <option value="APPROVED">APPROVED</option>
                         <option value="REJECTED">REJECTED</option>
@@ -451,17 +499,26 @@ const LoanApplications = () => {
                     </div>
                   </div>
                 </div>
-                <div className="detail-section">
-                  <h3>Loan Specific Details</h3>
+              </div>
+
+              <div className="detail-card-section evaluation-specs">
+                <h3>Financial Specifications</h3>
+                <div className="specs-content-wrapper">
                   {formatLoanDetails(selectedApp.loanType, selectedApp.loanDetails)}
                 </div>
               </div>
+            </div>
+
+            <div className="modal-footer-premium">
+              <button className="btn-modal-dismiss" onClick={() => setSelectedApp(null)}>
+                Dismiss View
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ZIP content selector modal */}
+      {/* Fixed Attachments Selector Modal */}
       <ZipContentSelector
         isOpen={showZipSelector}
         onClose={() => {
