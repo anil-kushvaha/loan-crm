@@ -2,19 +2,148 @@ import React, { useState, useEffect, useCallback } from "react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import JSZip from "jszip";
-import { saveAs } from "file-saver";
 import debounce from "lodash/debounce";
 import "./LoanApplications.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// Helper to format values for display
-const formatValue = (val) => (val ? val : "—");
-const formatCurrency = (amt) =>
-  amt ? `₹ ${Number(amt).toLocaleString("en-IN")}` : "—";
-const formatDate = (date) =>
-  date ? new Date(date).toLocaleDateString("en-IN") : "—";
+// ---------- Modal to select files from a ZIP ----------
+const ZipContentSelector = ({ isOpen, onClose, zipBlob, customerId, onDownload }) => {
+  const [files, setFiles] = useState([]);
+  const [selected, setSelected] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
+  // Load ZIP contents when modal opens
+  useEffect(() => {
+    if (!isOpen || !zipBlob) return;
+    const loadZip = async () => {
+      try {
+        const zip = await JSZip.loadAsync(zipBlob);
+        const fileList = [];
+        zip.forEach((relativePath, zipEntry) => {
+          if (!zipEntry.dir) {
+            fileList.push({
+              path: relativePath,
+              name: relativePath.split("/").pop(),
+            });
+          }
+        });
+        setFiles(fileList);
+        // Pre-select all files by default
+        const initialSelected = {};
+        fileList.forEach((file) => {
+          initialSelected[file.path] = true;
+        });
+        setSelected(initialSelected);
+        setError("");
+      } catch (err) {
+        console.error("Failed to unzip", err);
+        setError("Could not read ZIP contents. The file may be corrupted.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadZip();
+  }, [isOpen, zipBlob]);
+
+  if (!isOpen) return null;
+
+  const handleSelectAll = (checked) => {
+    const newSelected = {};
+    files.forEach((file) => {
+      newSelected[file.path] = checked;
+    });
+    setSelected(newSelected);
+  };
+
+  const handleCheck = (path, checked) => {
+    setSelected((prev) => ({ ...prev, [path]: checked }));
+  };
+
+  const handleDownloadSelected = async () => {
+    const toDownload = files.filter((file) => selected[file.path]);
+    if (toDownload.length === 0) {
+      alert("Please select at least one file.");
+      return;
+    }
+
+    try {
+      const zip = await JSZip.loadAsync(zipBlob);
+      const newZip = new JSZip();
+
+      for (const file of toDownload) {
+        const fileData = await zip.file(file.path).async("blob");
+        newZip.file(file.path, fileData);
+      }
+
+      const newZipBlob = await newZip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(newZipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Selected_Files_${customerId}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      onClose(); // close modal after download
+    } catch (err) {
+      console.error("Error creating new ZIP", err);
+      alert("Failed to create ZIP with selected files.");
+    }
+  };
+
+  const allSelected = files.length > 0 && files.every((f) => selected[f.path]);
+  const someSelected = files.some((f) => selected[f.path]);
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container document-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        <h3>Select Files to Download</h3>
+        {loading && <div className="loading-skeleton">Loading ZIP contents...</div>}
+        {error && <div className="error-card">{error}</div>}
+        {!loading && !error && (
+          <>
+            <div className="select-all-row">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(input) => {
+                    if (input) input.indeterminate = someSelected && !allSelected;
+                  }}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                />
+                Select All
+              </label>
+            </div>
+            <div className="documents-list" style={{ maxHeight: "300px", overflowY: "auto" }}>
+              {files.map((file) => (
+                <label key={file.path} className="doc-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={!!selected[file.path]}
+                    onChange={(e) => handleCheck(file.path, e.target.checked)}
+                  />
+                  {file.name}
+                </label>
+              ))}
+            </div>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={onClose}>Cancel</button>
+              <button className="btn-download" onClick={handleDownloadSelected}>
+                Download Selected ({Object.values(selected).filter(Boolean).length} files)
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ---------- Main Component ----------
 const LoanApplications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,12 +153,11 @@ const LoanApplications = () => {
   const [loanTypeFilter, setLoanTypeFilter] = useState("ALL");
   const [actionInProgress, setActionInProgress] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showZipSelector, setShowZipSelector] = useState(false);
+  const [currentZipBlob, setCurrentZipBlob] = useState(null);
+  const [currentCustomerId, setCurrentCustomerId] = useState(null);
 
-  // Modal states
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [showDocModal, setShowDocModal] = useState(false);
-  const [selectedDocs, setSelectedDocs] = useState({});
-
+  // Fetch all loan applications
   const fetchApplications = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -59,6 +187,7 @@ const LoanApplications = () => {
     []
   );
 
+  // Update loan status
   const updateStatus = async (appId, newStatus) => {
     try {
       const token = localStorage.getItem("token");
@@ -81,6 +210,7 @@ const LoanApplications = () => {
     }
   };
 
+  // Export single loan application as PDF (using html2canvas)
   const exportLoanPDF = async (app) => {
     if (actionInProgress === app._id) return;
     setActionInProgress(app._id);
@@ -107,153 +237,38 @@ const LoanApplications = () => {
     }, 100);
   };
 
-  // ----- Full Review Modal (show complete profile) -----
-  const openFullReview = (app) => {
-    setSelectedApp(app);
-    setShowReviewModal(true);
-  };
+  // Download full profile: fetch backend ZIP, unzip, show file selector
+  const downloadFullProfileWithSelection = async (application) => {
+    if (actionInProgress === application._id) return;
+    setActionInProgress(application._id);
 
-  // ----- Document Selection & Download -----
-  const openDocSelector = (app) => {
-    setSelectedApp(app);
-    // Initialize selectedDocs: all documents unchecked by default
-    const docs = app.applicantId?.documents || [];
-    const initialSelected = {};
-    docs.forEach((doc, idx) => {
-      initialSelected[idx] = false;
-    });
-    setSelectedDocs(initialSelected);
-    setShowDocModal(true);
-  };
-
-  const handleDocCheckbox = (idx, checked) => {
-    setSelectedDocs((prev) => ({ ...prev, [idx]: checked }));
-  };
-
-  const downloadSelectedDocuments = async () => {
-    const docs = selectedApp?.applicantId?.documents || [];
-    const toDownload = docs.filter((_, idx) => selectedDocs[idx]);
-    if (toDownload.length === 0) {
-      alert("Please select at least one document.");
-      return;
-    }
-
-    setActionInProgress("doc_zip");
     try {
-      const zip = new JSZip();
-      for (const doc of toDownload) {
-        if (!doc.documentUrl) continue;
-        const response = await fetch(doc.documentUrl);
-        if (!response.ok) throw new Error(`Failed to fetch ${doc.documentName}`);
-        const blob = await response.blob();
-        // Create safe filename
-        const ext = doc.documentUrl.split(".").pop().split("?")[0];
-        const safeName = `${doc.documentName}_${doc.documentType}.${ext}`.replace(/[^a-z0-9._-]/gi, "_");
-        zip.file(safeName, blob);
+      const token = localStorage.getItem("token");
+      const customerId = application.customerId;
+      const profileUrl = API_BASE_URL.endsWith('/api')
+        ? `${API_BASE_URL.replace(/\/api$/, '')}/api/v1/applicant/download-full-profile/${customerId}`
+        : `${API_BASE_URL}/v1/applicant/download-full-profile/${customerId}`;
+
+      const response = await fetch(profileUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || "Download failed");
       }
-      const content = await zip.generateAsync({ type: "blob" });
-      saveAs(content, `selected_documents_${selectedApp.customerId}.zip`);
-    } catch (err) {
-      console.error("Zip error:", err);
-      alert("Failed to download selected documents: " + err.message);
-    } finally {
-      setActionInProgress(null);
-      setShowDocModal(false);
-    }
-  };
-
-  const downloadSingleDocument = async (doc, idx) => {
-    if (!doc.documentUrl) return;
-    try {
-      const response = await fetch(doc.documentUrl);
-      const blob = await response.blob();
-      const ext = doc.documentUrl.split(".").pop().split("?")[0];
-      const fileName = `${doc.documentName}_${doc.documentType}.${ext}`.replace(/[^a-z0-9._-]/gi, "_");
-      saveAs(blob, fileName);
+      const zipBlob = await response.blob();
+      setCurrentZipBlob(zipBlob);
+      setCurrentCustomerId(customerId);
+      setShowZipSelector(true);
     } catch (err) {
       console.error("Download error:", err);
-      alert("Failed to download document.");
+      alert("Error fetching full profile: " + err.message);
+    } finally {
+      setActionInProgress(null);
     }
   };
 
-  // Helper to render the full profile inside the review modal
-  const renderFullProfile = (app) => {
-    const personal = app.applicantId?.personalDetails || {};
-    const address = app.applicantId?.addressDetails || {};
-    const employment = app.applicantId?.employmentDetails || {};
-    const coApplicants = app.applicantId?.coApplicants || [];
-    const documents = app.applicantId?.documents || [];
-
-    const loanTypeLabels = {
-      PERSONAL_LOAN: "Personal Loan",
-      HOME_LOAN: "Home Loan",
-      CAR_LOAN: "Car Loan",
-      EDUCATION_LOAN: "Education Loan",
-      LAP: "Loan Against Property",
-    };
-
-    return (
-      <div className="full-profile-content">
-        <h3>Applicant Profile</h3>
-        <p><strong>Customer ID:</strong> {formatValue(app.customerId)}</p>
-        <p><strong>Profile Completion:</strong> {app.applicantId?.profileCompletion || 0}%</p>
-
-        <h4>Personal Details</h4>
-        <div className="detail-grid">
-          <div><strong>Full Name:</strong> {formatValue(personal.fullName)}</div>
-          <div><strong>Gender:</strong> {formatValue(personal.gender)}</div>
-          <div><strong>DOB:</strong> {formatDate(personal.dob)}</div>
-          <div><strong>Email:</strong> {formatValue(personal.email)}</div>
-          <div><strong>Mobile:</strong> {formatValue(personal.mobile)}</div>
-          <div><strong>PAN:</strong> {formatValue(personal.panCard)}</div>
-          <div><strong>Aadhaar:</strong> {formatValue(personal.aadhaar)}</div>
-          <div><strong>Father:</strong> {formatValue(personal.fatherName)}</div>
-          <div><strong>Mother:</strong> {formatValue(personal.motherName)}</div>
-          <div><strong>Marital Status:</strong> {formatValue(personal.maritalStatus)}</div>
-          <div><strong>Spouse:</strong> {formatValue(personal.spouseName)}</div>
-          <div><strong>Qualification:</strong> {formatValue(personal.qualification)}</div>
-        </div>
-
-        <h4>Address Details</h4>
-        <div className="detail-grid">
-          <div><strong>Address Line 1:</strong> {formatValue(address.addressLine1)}</div>
-          <div><strong>City:</strong> {formatValue(address.city)}</div>
-          <div><strong>State:</strong> {formatValue(address.state)}</div>
-          <div><strong>Pincode:</strong> {formatValue(address.pincode)}</div>
-        </div>
-
-        <h4>Employment Details</h4>
-        <div className="detail-grid">
-          <div><strong>Type:</strong> {formatValue(employment.employmentType)}</div>
-          <div><strong>Company:</strong> {formatValue(employment.companyName)}</div>
-          <div><strong>Monthly Salary:</strong> {formatCurrency(employment.salary)}</div>
-          <div><strong>Annual Income:</strong> {formatCurrency(employment.annualIncome)}</div>
-          <div><strong>Experience:</strong> {employment.workExperience ? `${employment.workExperience} years` : "—"}</div>
-        </div>
-
-        <h4>Loan Application</h4>
-        <div className="detail-grid">
-          <div><strong>Loan Type:</strong> {loanTypeLabels[app.loanType] || app.loanType}</div>
-          <div><strong>Request Amount:</strong> {formatCurrency(app.loanDetails?.requestAmount)}</div>
-          <div><strong>Status:</strong> {app.status}</div>
-          <div><strong>Applied On:</strong> {new Date(app.appliedAt).toLocaleString()}</div>
-        </div>
-
-        <h4>Documents</h4>
-        {documents.length ? (
-          documents.map((doc, i) => (
-            <div key={i} className="document-item">
-              <strong>{doc.documentName}</strong> ({doc.documentType}) – {doc.verified ? "Verified" : "Pending"}
-            </div>
-          ))
-        ) : (
-          <p>No documents uploaded.</p>
-        )}
-      </div>
-    );
-  };
-
-  // Filtering & rendering of table rows (unchanged except buttons)
+  // Filtering logic
   const filteredApps = applications.filter((app) => {
     if (statusFilter !== "ALL" && app.status !== statusFilter) return false;
     if (loanTypeFilter !== "ALL" && app.loanType !== loanTypeFilter) return false;
@@ -386,24 +401,23 @@ const LoanApplications = () => {
                     <button className="btn-pdf" onClick={() => exportLoanPDF(app)} disabled={actionInProgress === app._id}>
                       {actionInProgress === app._id ? "..." : "Loan PDF"}
                     </button>
-                    {/* NEW: Full Review button */}
-                    <button className="btn-review" onClick={() => openFullReview(app)}>
-                      Full Review
+                    <button
+                      className="btn-full"
+                      onClick={() => downloadFullProfileWithSelection(app)}
+                      disabled={actionInProgress === app._id}
+                    >
+                      {actionInProgress === app._id ? "..." : "Full Profile"}
                     </button>
-                    {/* NEW: Select Documents button */}
-                    <button className="btn-doc-select" onClick={() => openDocSelector(app)}>
-                      Select Documents
-                    </button>
-                  </td>
-                </tr>
+                   </td>
+                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
 
-      {/* Modal for Loan Details (existing) */}
-      {selectedApp && !showReviewModal && !showDocModal && (
+      {/* Modal for loan application details (existing) */}
+      {selectedApp && (
         <div className="modal-overlay" onClick={() => setSelectedApp(null)}>
           <div className="modal-container" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setSelectedApp(null)}>×</button>
@@ -447,68 +461,17 @@ const LoanApplications = () => {
         </div>
       )}
 
-      {/* FULL REVIEW MODAL */}
-      {showReviewModal && selectedApp && (
-        <div className="modal-overlay" onClick={() => setShowReviewModal(false)}>
-          <div className="modal-container large-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowReviewModal(false)}>×</button>
-            <div className="modal-header">
-              <h2>Full Applicant Review</h2>
-            </div>
-            <div className="modal-body review-body">
-              {renderFullProfile(selectedApp)}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* DOCUMENT SELECTION MODAL */}
-      {showDocModal && selectedApp && (
-        <div className="modal-overlay" onClick={() => setShowDocModal(false)}>
-          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowDocModal(false)}>×</button>
-            <div className="modal-header">
-              <h2>Select Documents to Download</h2>
-            </div>
-            <div className="modal-body">
-              {selectedApp.applicantId?.documents?.length ? (
-                <div className="doc-list">
-                  {selectedApp.applicantId.documents.map((doc, idx) => (
-                    <div key={idx} className="doc-select-item">
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={!!selectedDocs[idx]}
-                          onChange={(e) => handleDocCheckbox(idx, e.target.checked)}
-                        />
-                        <strong>{doc.documentName}</strong> ({doc.documentType})
-                      </label>
-                      <button
-                        className="btn-single-download"
-                        onClick={() => downloadSingleDocument(doc, idx)}
-                      >
-                        Download
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p>No documents available.</p>
-              )}
-              <div className="doc-modal-actions">
-                <button
-                  className="btn-download-zip"
-                  onClick={downloadSelectedDocuments}
-                  disabled={actionInProgress === "doc_zip"}
-                >
-                  {actionInProgress === "doc_zip" ? "Creating ZIP..." : "Download Selected as ZIP"}
-                </button>
-                <button className="btn-cancel" onClick={() => setShowDocModal(false)}>Cancel</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ZIP content selector modal */}
+      <ZipContentSelector
+        isOpen={showZipSelector}
+        onClose={() => {
+          setShowZipSelector(false);
+          setCurrentZipBlob(null);
+          setCurrentCustomerId(null);
+        }}
+        zipBlob={currentZipBlob}
+        customerId={currentCustomerId}
+      />
     </div>
   );
 };

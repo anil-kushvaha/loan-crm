@@ -25,17 +25,14 @@ export const apiRequest = async ({
           : {
               "Content-Type": "application/json",
             }),
-
         ...(token && {
           Authorization: `Bearer ${token}`,
         }),
       },
-
       body: body ? (isFormData ? body : JSON.stringify(body)) : null,
     });
 
     const contentType = response.headers.get("content-type");
-
     const data = contentType?.includes("application/json")
       ? await response.json()
       : await response.text();
@@ -56,18 +53,15 @@ export const apiRequest = async ({
 };
 
 // ==============================
-// UPLOAD FILE
+// UPLOAD FILE (FIXED)
 // ==============================
 export const uploadFile = async (applicantId, formData) => {
-  const token = localStorage.getItem("token");
-  const res = await fetch(
-    `${API_BASE_URL}/v1/applicant/documents/${applicantId}`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    },
-  );
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/v1/applicant/documents/${applicantId}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
   const data = await res.json();
   if (!data.success) throw new Error(data.message);
   return data;
@@ -78,29 +72,18 @@ export const uploadFile = async (applicantId, formData) => {
 // ==============================
 export const downloadFile = async (endpoint, fileName = "file.zip") => {
   const token = getToken();
-
   const response = await fetch(`${API_BASE}${endpoint}`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { Authorization: `Bearer ${token}` },
   });
-
-  if (!response.ok) {
-    throw new Error("Download failed");
-  }
-
+  if (!response.ok) throw new Error("Download failed");
   const blob = await response.blob();
-
   const url = window.URL.createObjectURL(blob);
-
   const a = document.createElement("a");
   a.href = url;
   a.download = fileName;
-
   document.body.appendChild(a);
   a.click();
   a.remove();
-
   window.URL.revokeObjectURL(url);
 };
