@@ -130,21 +130,8 @@ const CustomerDashboard = () => {
         {/* TABS CONTROLLER: PROFILE VIEW */}
         {activeTab === "profile" && (
           <div className="cd-profile-container">
-            <div className="cd-header">
-              <div className="cd-header-meta">
-                <h1>My Profile Workspace</h1>
-                <p>Complete multi-tier compliance checks to activate immediate funding options</p>
-              </div>
-              <div className="cd-progress-section">
-                <div className="cd-progress-text">
-                  <span>Profile Completion</span>
-                  <span className="cd-percentage">{completion}%</span>
-                </div>
-                <div className="cd-progress-bar">
-                  <div className="cd-progress-fill" style={{ width: `${completion}%` }}></div>
-                </div>
-              </div>
-            </div>
+            
+          
 
             {/* FIXED TABS TRACK CONTROLLER: SARE TABS EK SAATH SHOW HONGE */}
             <div className="cd-profile-subnav-grid">
