@@ -8,6 +8,7 @@ import {
   updateEmploymentDetails,
   updateCoApplicants,
   uploadDocument,
+  deleteDocument,
 } from "../controllers/applicant.controller.js";
 import { downloadFullProfileZip } from "../controllers/download.controller.js";
 import multer from "multer";
@@ -30,5 +31,6 @@ router.put("/address/:applicantId", updateAddressDetails);
 router.put("/employment/:applicantId", updateEmploymentDetails);
 router.put("/co-applicants/:applicantId", updateCoApplicants);
 router.post("/documents/:applicantId", upload.single("file"), uploadDocument);
+router.delete("/documents/:applicantId/:documentId", deleteDocument);
 
 export default router;

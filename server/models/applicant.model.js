@@ -106,6 +106,7 @@ const applicantSchema = new mongoose.Schema(
         documentName: String,
         documentType: String,
         documentUrl: String,
+        publicId: { type: String }, // Cloudinary public_id for deletion
         verified: { type: Boolean, default: false },
         uploadedAt: { type: Date, default: Date.now },
       },

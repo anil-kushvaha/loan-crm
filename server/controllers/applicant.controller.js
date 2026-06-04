@@ -192,6 +192,26 @@ export const uploadDocument = asyncHandler(async (req, res) => {
       .json({ success: false, message: "No file uploaded" });
   }
 
+  // Check if document with same name already exists
+  const existingDocIndex = applicant.documents.findIndex(
+    (doc) => doc.documentName.toLowerCase() === documentName.toLowerCase(),
+  );
+
+  // If exists, delete old file from Cloudinary
+  if (existingDocIndex !== -1) {
+    const existingDoc = applicant.documents[existingDocIndex];
+    if (existingDoc.publicId) {
+      try {
+        await cloudinary.uploader.destroy(existingDoc.publicId);
+      } catch (cloudErr) {
+        console.error("Cloudinary delete error during replace:", cloudErr);
+        // Continue anyway, we still upload new file
+      }
+    }
+    // Remove the old document from array
+    applicant.documents.splice(existingDocIndex, 1);
+  }
+
   try {
     // Upload to Cloudinary using buffer
     const result = await new Promise((resolve, reject) => {
@@ -199,6 +219,7 @@ export const uploadDocument = asyncHandler(async (req, res) => {
         {
           folder: `loan_applications/${applicant.customerId}`,
           resource_type: "auto",
+          access_mode: "public", // <-- ADD THIS LINE
         },
         (error, uploadResult) => {
           if (error) reject(error);
@@ -209,11 +230,13 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     });
 
     const documentUrl = result.secure_url;
+    const publicId = result.public_id;
 
     applicant.documents.push({
       documentName,
       documentType,
       documentUrl,
+      publicId,
       verified: false,
       uploadedAt: new Date(),
     });
@@ -224,9 +247,51 @@ export const uploadDocument = asyncHandler(async (req, res) => {
     res.json({ success: true, message: "Document uploaded", data: applicant });
   } catch (cloudError) {
     console.error("Cloudinary upload error:", cloudError);
-    // Detailed error (hide sensitive info in production)
     const errorMessage =
       cloudError.message || "File upload failed. Please try again.";
     res.status(500).json({ success: false, message: errorMessage });
   }
+});
+
+export const deleteDocument = asyncHandler(async (req, res) => {
+  const { applicantId, documentId } = req.params;
+  const applicant = await Applicant.findById(applicantId);
+  if (!applicant) {
+    return res
+      .status(404)
+      .json({ success: false, message: "Applicant not found" });
+  }
+
+  const documentIndex = applicant.documents.findIndex(
+    (doc) => doc._id.toString() === documentId,
+  );
+  if (documentIndex === -1) {
+    return res
+      .status(404)
+      .json({ success: false, message: "Document not found" });
+  }
+
+  const document = applicant.documents[documentIndex];
+
+  // Delete from Cloudinary if publicId exists
+  if (document.publicId) {
+    try {
+      await cloudinary.uploader.destroy(document.publicId);
+    } catch (cloudErr) {
+      console.error("Cloudinary delete error:", cloudErr);
+      // Continue to remove from DB even if Cloudinary fails
+    }
+  }
+
+  // Remove from array
+  applicant.documents.splice(documentIndex, 1);
+  await applicant.save();
+  await calculateProfileCompletion(applicant);
+  await applicant.save();
+
+  res.json({
+    success: true,
+    message: "Document deleted successfully",
+    data: applicant,
+  });
 });

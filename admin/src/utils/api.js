@@ -68,6 +68,23 @@ export const uploadFile = async (applicantId, formData) => {
 };
 
 // ==============================
+// DELETE DOCUMENT
+// ==============================
+export const deleteDocument = async (applicantId, documentId) => {
+  const token = getToken();
+  const res = await fetch(
+    `${API_BASE}/v1/applicant/documents/${applicantId}/${documentId}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message);
+  return data;
+};
+
+// ==============================
 // DOWNLOAD FILE
 // ==============================
 export const downloadFile = async (endpoint, fileName = "file.zip") => {
